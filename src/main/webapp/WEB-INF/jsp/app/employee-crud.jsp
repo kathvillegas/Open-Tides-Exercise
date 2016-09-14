@@ -193,7 +193,7 @@
 <script type="text/template" id="skills-template">
 	<form id="skillForm" class="row-fluid skill-row" data-id={{id}}>
 		<div class="span5">
-		    <input type="hidden" value="{{id}}" name="employee" data-id={{id}} />
+		    <input id="skillID" type="hidden" value="{{id}}" name="employee" data-id={{id}} />
 			<input type="text" readonly="readonly" value="{{name}}" name="name" data-id={{id}} />
 		</div>
 		<div  class="span5">
@@ -203,7 +203,7 @@
 			<i class='icon-save save-skill-action hide' data-id='{{id}}' data-title="<spring:message code="label.skill.save" />"></i>
 			<i class='icon-pencil edit-action' data-id='{{id}}' data-title="<spring:message code="label.edit" />"></i>
 			<i class='icon-save update-skill-action hide' data-id='{{id}}' data-title="<spring:message code="label.skill.update" />"></i>
-			<i class='icon-trash remove-action' data-id='{{id}}' data-title="<spring:message code="label.delete" />"></i>
+			<i class='icon-trash remove-action delete-skill-action' data-id='{{id}}' data-title="<spring:message code="label.delete" />"></i>
 		</div>
 	</form>
 </script>
@@ -212,7 +212,7 @@
 	<form id="dtrForm" class="dtr-row">
 		<div class="row-fluid" data-id={{id}}>
 		<div class="span6">
-		    <input type="hidden" value="{{id}}" name="employee" data-id={{id}} />
+		    <input id="dtrID" type="hidden" value="{{id}}" name="employee" data-id={{id}} />
 			<input type="datetime-local" readonly="readonly" value="{{timeInWithTime}}" name="timeIn" data-id={{id}} />
 		</div>
 		<div  class="span6">
@@ -228,8 +228,9 @@
 		</div>
 		<div class="span6">
 			<i class='icon-save save-dtr-action hide' data-id='{{id}}' data-title="<spring:message code="label.edit" />"></i>
-			<i class='icon-pencil edit-action' data-id='{{id}}' data-title="<spring:message code="label.edit" />"></i>
-			<i class='icon-trash remove-action' data-id='{{id}}' data-title="<spring:message code="label.delete" />"></i>
+			<i class='icon-pencil edit-action edit-dtr-action' data-id='{{id}}' data-title="<spring:message code="label.edit" />"></i>
+			<i class='icon-save update-dtr-action hide' data-id='{{id}}' data-title="<spring:message code="label.dtr.update" />"></i>
+			<i class='icon-trash remove-action delete-dtr-action' data-id='{{id}}' data-title="<spring:message code="label.delete" />"></i>
 		</div>
 		</div>
 	</form>
@@ -237,12 +238,13 @@
 <tides:footer>
 	<script type="text/javascript">
 		$(document).ready(function() {
-			
+			var ID;
+			var VALUE;
 			$("#employee-body").RESTful();
 			
 			$('.footable').footable();
 			
-			$('body').tooltip({selector: '.edit-action, .remove-action, .addSkill-action, .addDtr-action, .update-skill-action, .edit-skill-action'});
+			$('body').tooltip({selector: '.edit-action, .remove-action, .addSkill-action, .addDtr-action, .update-skill-action, .edit-skill-action, .update-dtr-action, .edit-dtr-action'});
 			
 			// SKILL MODAL TRIGGER
 			$('.icon-list').click(function() {
@@ -278,7 +280,6 @@
 					null, // data
 					function(dtr) { // callback
 						var template = opentides3.template($('#dtr-template').html());
-						console.log(dtr);
 						$.each(dtr, function(i, dtr) {
 							var dtrRow = template(dtr);
 							
@@ -326,12 +327,17 @@
 			///SAVING SKILL
 		}).on('click', '.save-skill-action', function() {
 			var skillRow = $(this).closest('.skill-row');
+			
 			$.ajax({type : 'POST', // method
 				url : 'skill', // url
 				data : skillRow.serialize(), // data
 				success : function(json) { // callback
 					if (typeof (json.command) === 'object'
 						&& json.command.id > 0) {
+						ID = json.command.id;
+						//skillRow.find('.update-skill-action').prop('data-id',json.command.id);
+						//skillRow.find('.delete-skill-action').prop('data-id',json.command.id);
+						//skillRow.find('#skillID').val(json.command.id);
 						skillRow.find('input').prop('readonly', true);
 						skillRow.find('.save-skill-action').addClass('hide');
 						skillRow.find('.edit-action').removeClass('hide');
@@ -343,15 +349,18 @@
 				//EDIT SKILL
 			}).on('click', '.edit-action', function() {
 				var skillRow = $(this).closest('.skill-row');
+				skillRow.find('.update-skill-action').prop('data-id',ID);
+				skillRow.find('#skillID').val(ID);
 				skillRow.find('input').prop('readonly', false);
 				skillRow.find('.update-skill-action').removeClass('hide');
 				skillRow.find('.edit-action').addClass('hide');
 				skillRow.find('.remove-action').addClass('hide');
+				skillRow.find('#skillID').prop('name', 'id');
 
 				//UPDATE SKILL
 			}).on('click', '.update-skill-action', function() {
-				var id =  $(this).data('id');
-				alert(id);
+				var id =  $(this).prop('data-id');
+				console.log($(this));
 				var skillRow = $(this).closest('.skill-row');
 				$.ajax({type : 'POST', // method
 					url : 'skill/' + id, // url
@@ -359,11 +368,26 @@
 					success : function(json) { // callback
 						if (typeof (json.command) === 'object'
 							&& json.command.id > 0) {
+							
 							skillRow.find('input').prop('readonly', true);
 							skillRow.find('.update-skill-action').addClass('hide');
 							skillRow.find('.edit-action').removeClass('hide');
 							skillRow.find('.remove-action').removeClass('hide');
 						}
+					},
+						dataType : 'json'
+				});
+				//DELETING SKILL
+			}).on('click', '.delete-skill-action', function() {
+				var id =  $(this).data('id');
+				console.log($(this));
+				var skillRow = $(this).closest('.skill-row');
+				$.ajax({type : 'POST', // method
+					url : 'skill/' + id, // url
+					type: 'DELETE',
+					success : function(json) { // callback
+						alert("successfully deleted");
+						skillRow.remove();
 					},
 						dataType : 'json'
 				});
@@ -377,6 +401,8 @@
 						if (typeof (json.command) === 'object'
 							&& json.command.id > 0) {
 							alert(dtrRow.serialize());
+							dtrRow.find('.update-dtr-action').prop('data-id',json.command.id);
+							dtrRow.find('#dtrID').val(json.command.id);
 							dtrRow.find('input').prop('readonly', true);
 							dtrRow.find('select').prop('disabled', true);
 							dtrRow.find('.save-dtr-action').addClass('hide');
@@ -386,6 +412,51 @@
 					},
 						dataType : 'json'
 				});
-			});
-	</script>
+				//EDIT DTR
+			}).on('click', '.edit-dtr-action', function() {
+				var dtrRow = $(this).closest('.dtr-row');
+				dtrRow.find('input').prop('readonly', false);
+				dtrRow.find('select').prop('disabled', false);
+				dtrRow.find('.update-dtr-action').removeClass('hide');
+				dtrRow.find('.edit-action').addClass('hide');
+				dtrRow.find('.remove-action').addClass('hide');
+				dtrRow.find('#dtrID').prop('name', 'id');
+
+				//UPDATE SKILL
+			}).on('click', '.update-dtr-action', function() {
+				var id =  $(this).prop('data-id');
+				console.log($(this));
+				var dtrRow = $(this).closest('.dtr-row');
+				$.ajax({type : 'POST', // method
+					url : '${home}/dailyTimeRecord/' + id, // url
+					data : dtrRow.serialize(), // data
+					success : function(json) { // callback
+						if (typeof (json.command) === 'object'
+							&& json.command.id > 0) {
+							
+							dtrRow.find('input').prop('readonly', true);
+							dtrRow.find('select').prop('disabled', true);
+							dtrRow.find('.update-dtr-action').addClass('hide');
+							dtrRow.find('.edit-action').removeClass('hide');
+							dtrRow.find('.remove-action').removeClass('hide');
+						}
+					},
+						dataType : 'json'
+				});
+				//DELETING SKILL
+			}).on('click', '.delete-dtr-action', function() {
+				var id =  $(this).data('id');
+				var dtrRow = $(this).closest('.dtr-row');
+				$.ajax({type : 'POST', // method
+					url : '${home}/dailyTimeRecord/' + id, // url
+					type: 'DELETE',
+					success : function(json) { // callback
+						alert("successfully deleted");
+						dtrRow.remove();
+					},
+						dataType : 'json'
+				});
+			});	
+			
+			</script>
 </tides:footer>
