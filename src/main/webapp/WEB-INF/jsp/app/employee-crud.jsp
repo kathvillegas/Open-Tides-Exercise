@@ -239,7 +239,9 @@
 	<script type="text/javascript">
 		$(document).ready(function() {
 			var ID;
-			var VALUE;
+			var ID_DTR;
+			VALUE = 0;
+			VALUE_DTR=0;
 			$("#employee-body").RESTful();
 			
 			$('.footable').footable();
@@ -248,6 +250,7 @@
 			
 			// SKILL MODAL TRIGGER
 			$('.icon-list').click(function() {
+				VALUE = 0;
 				var id = $(this).data('id');
 				$("#skills-body").on("hidden.bs.modal", function(){
 				    $(".skills-container").html("");
@@ -269,6 +272,7 @@
 			
 			// DTR MODAL TRIGGER
 			$('.icon-calendar').click(function() {
+				VALUE_DTR = 0;
 				var id = $(this).data('id');
 				$("#dtr-body").on("hidden.bs.modal", function(){
 				    $(".dtr-container").html("");
@@ -297,7 +301,7 @@
 					name : ""
 				});
 				$('#skills-body .skills-container').append(newSkillRow);
-				
+
 				var newRow = $('.skills-container #skillForm').last();
 				newRow.find('input').prop('readonly', false);
 				newRow.find('.save-skill-action').removeClass('hide');
@@ -335,13 +339,13 @@
 					if (typeof (json.command) === 'object'
 						&& json.command.id > 0) {
 						ID = json.command.id;
-						//skillRow.find('.update-skill-action').prop('data-id',json.command.id);
-						//skillRow.find('.delete-skill-action').prop('data-id',json.command.id);
-						//skillRow.find('#skillID').val(json.command.id);
+						skillRow.find('.update-skill-action').prop('data-id',json.command.id);
+						skillRow.find('#skillID').val(json.command.id);
 						skillRow.find('input').prop('readonly', true);
 						skillRow.find('.save-skill-action').addClass('hide');
 						skillRow.find('.edit-action').removeClass('hide');
 						skillRow.find('.remove-action').removeClass('hide');
+						VALUE = 1;
 					}
 				},
 					dataType : 'json'
@@ -349,8 +353,12 @@
 				//EDIT SKILL
 			}).on('click', '.edit-action', function() {
 				var skillRow = $(this).closest('.skill-row');
-				skillRow.find('.update-skill-action').prop('data-id',ID);
-				skillRow.find('#skillID').val(ID);
+					if(VALUE == 0){
+						ID = $(this).data('id');
+						skillRow.find('.update-skill-action').prop('data-id',ID);
+						skillRow.find('#skillID').val(ID);
+					}
+				
 				skillRow.find('input').prop('readonly', false);
 				skillRow.find('.update-skill-action').removeClass('hide');
 				skillRow.find('.edit-action').addClass('hide');
@@ -373,6 +381,7 @@
 							skillRow.find('.update-skill-action').addClass('hide');
 							skillRow.find('.edit-action').removeClass('hide');
 							skillRow.find('.remove-action').removeClass('hide');
+							VALUE = 0;
 						}
 					},
 						dataType : 'json'
@@ -400,7 +409,7 @@
 					success : function(json) { // callback
 						if (typeof (json.command) === 'object'
 							&& json.command.id > 0) {
-							alert(dtrRow.serialize());
+							ID_DTR = json.command.id;
 							dtrRow.find('.update-dtr-action').prop('data-id',json.command.id);
 							dtrRow.find('#dtrID').val(json.command.id);
 							dtrRow.find('input').prop('readonly', true);
@@ -408,6 +417,7 @@
 							dtrRow.find('.save-dtr-action').addClass('hide');
 							dtrRow.find('.edit-action').removeClass('hide');
 							dtrRow.find('.remove-action').removeClass('hide');
+							VALUE_DTR = 1;
 						}
 					},
 						dataType : 'json'
@@ -415,6 +425,11 @@
 				//EDIT DTR
 			}).on('click', '.edit-dtr-action', function() {
 				var dtrRow = $(this).closest('.dtr-row');
+				if(VALUE_DTR == 0){
+					ID_DTR = $(this).data('id');
+					dtrRow.find('.update-dtr-action').prop('data-id',ID_DTR);
+					dtrRow.find('#dtrID').val(ID_DTR);
+				}
 				dtrRow.find('input').prop('readonly', false);
 				dtrRow.find('select').prop('disabled', false);
 				dtrRow.find('.update-dtr-action').removeClass('hide');
@@ -439,6 +454,7 @@
 							dtrRow.find('.update-dtr-action').addClass('hide');
 							dtrRow.find('.edit-action').removeClass('hide');
 							dtrRow.find('.remove-action').removeClass('hide');
+							VALUE_DTR = 0;
 						}
 					},
 						dataType : 'json'
